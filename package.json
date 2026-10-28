@@ -1,0 +1,10 @@
+{
+  "name": "weather-api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Serverless weather API on AWS Lambda and API Gateway backed by Open-Meteo",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  }
+}
