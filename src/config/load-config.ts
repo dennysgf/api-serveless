@@ -1,27 +1,20 @@
 import { z } from 'zod';
 
-const DEFAULT_GEOCODING_BASE_URL = 'https://geocoding-api.open-meteo.com/v1';
-const DEFAULT_FORECAST_BASE_URL = 'https://api.open-meteo.com/v1';
+const DEFAULT_GEOCODING_URL = 'https://geocoding-api.open-meteo.com/v1';
+const DEFAULT_FORECAST_URL = 'https://api.open-meteo.com/v1';
 const DEFAULT_TIMEOUT_MS = 5000;
 const MAX_TIMEOUT_MS = 30000;
 
-const environmentSchema = z.object({
-  OPEN_METEO_GEOCODING_BASE_URL: z.url().default(DEFAULT_GEOCODING_BASE_URL),
-  OPEN_METEO_FORECAST_BASE_URL: z.url().default(DEFAULT_FORECAST_BASE_URL),
-  OPEN_METEO_TIMEOUT_MS: z.coerce
-    .number()
-    .int()
-    .positive()
-    .max(MAX_TIMEOUT_MS)
-    .default(DEFAULT_TIMEOUT_MS),
+const configSchema = z.object({
+  geocoding: z.url().default(DEFAULT_GEOCODING_URL),
+  forecast: z.url().default(DEFAULT_FORECAST_URL),
+  timeout: z.coerce.number().int().positive().max(MAX_TIMEOUT_MS).default(DEFAULT_TIMEOUT_MS),
 });
 
 export type AppConfig = {
-  readonly openMeteo: {
-    readonly geocodingBaseUrl: string;
-    readonly forecastBaseUrl: string;
-    readonly timeoutMs: number;
-  };
+  readonly geocodingUrl: string;
+  readonly forecastUrl: string;
+  readonly timeoutMs: number;
 };
 
 export class ConfigurationError extends Error {
@@ -34,7 +27,12 @@ export class ConfigurationError extends Error {
 export const loadConfig = (
   environment: Readonly<Record<string, string | undefined>>,
 ): AppConfig => {
-  const result = environmentSchema.safeParse(environment);
+  const { GEOCODING_URL, FORECAST_URL, TIMEOUT_MS } = environment;
+  const result = configSchema.safeParse({
+    geocoding: GEOCODING_URL,
+    forecast: FORECAST_URL,
+    timeout: TIMEOUT_MS,
+  });
   if (!result.success) {
     const details = result.error.issues
       .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
@@ -42,10 +40,8 @@ export const loadConfig = (
     throw new ConfigurationError(`Invalid configuration: ${details}`);
   }
   return {
-    openMeteo: {
-      geocodingBaseUrl: result.data.OPEN_METEO_GEOCODING_BASE_URL,
-      forecastBaseUrl: result.data.OPEN_METEO_FORECAST_BASE_URL,
-      timeoutMs: result.data.OPEN_METEO_TIMEOUT_MS,
-    },
+    geocodingUrl: result.data.geocoding,
+    forecastUrl: result.data.forecast,
+    timeoutMs: result.data.timeout,
   };
 };
