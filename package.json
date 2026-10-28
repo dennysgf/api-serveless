@@ -28,5 +28,8 @@
     "test:watch": "vitest",
     "check:comments": "tsx scripts/check-no-comments.ts",
     "check": "npm run typecheck && npm run lint && npm run format:check && npm test"
+  },
+  "dependencies": {
+    "zod": "^4.6.7"
   }
 }
